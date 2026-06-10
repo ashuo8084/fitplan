@@ -378,7 +378,19 @@ function genMeals(cal,macros,seed){
   <div style="margin-top:10px;padding:8px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--sub);text-align:center">📊 全天合计 ~<b style="color:var(--text)">${totalKcal}kcal</b> · 蛋白<b style="color:var(--text)">${totalP}g</b> · 碳水<b style="color:var(--text)">${totalC}g</b> · 脂肪<b style="color:var(--text)">${totalF}g</b></div>`;
 }
 
-function shuffleMeals(){lastMealSeed=Date.now();document.getElementById('mealPlan').innerHTML=genMeals(Math.round(calcTarget(calcTDEE(calcBMR(document.getElementById('gender').value,toKg(parseFloat(document.getElementById('weight').value)||75),toCm(parseFloat(document.getElementById('height').value)||175),parseInt(document.getElementById('age').value)||25,parseFloat(document.getElementById('bodyfat').value)||null),parseFloat(document.getElementById('activity').value)||1.55),goal),null,lastMealSeed)}
+function shuffleMeals(){
+  lastMealSeed=Date.now();
+  var g=document.getElementById('gender').value;
+  var w=toKg(parseFloat(document.getElementById('weight').value)||75);
+  var h=toCm(parseFloat(document.getElementById('height').value)||175);
+  var a=parseInt(document.getElementById('age').value)||25;
+  var bf=parseFloat(document.getElementById('bodyfat').value)||null;
+  var af=parseFloat(document.getElementById('activity').value)||1.55;
+  var bmr=calcBMR(g,w,h,a,bf);
+  var tdee=calcTDEE(bmr,af);
+  var target=Math.round(calcTarget(tdee,goal));
+  document.getElementById('mealPlan').innerHTML=genMeals(target,null,lastMealSeed);
+}
 
 // ========== TRAINING ==========
 function genTraining(){
