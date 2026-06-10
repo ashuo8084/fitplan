@@ -4,787 +4,502 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FitPlan · 增肌减脂智能规划</title>
+<meta name="description" content="AI 定制增肌减脂方案：热量计算、食谱推荐、力量训练">
+<link rel="manifest" href="data:application/json,{}">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --card: #13131d;
-    --border: #1e1e30;
-    --text: #e8e8f0;
-    --sub: #7c7c9a;
-    --accent: #ff5722;
-    --accent2: #00c9a7;
-    --blue: #4a90d9;
-    --pink: #e91e63;
-    --gold: #ffb300;
-    --red: #ff3d3d;
-    --green: #00e676;
+    --bg: #0a0a0f; --card: #13131d; --border: #1e1e30;
+    --text: #e8e8f0; --sub: #7c7c9a;
+    --accent: #ff5722; --accent2: #00c9a7; --blue: #4a90d9; --gold: #ffb300;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+  .hero{text-align:center;padding:36px 20px 24px;background:linear-gradient(135deg,#0a0a18,#13132b,#0d0d1f);border-bottom:1px solid var(--border)}
+  .hero h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--gold),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero p{color:var(--sub);font-size:14px;margin-top:6px}
+  .container{max-width:1100px;margin:0 auto;padding:0 20px}
+  .form-section{margin-top:-16px;position:relative;z-index:2}
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 22px;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+  .form-group label{display:block;font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .form-group input,.form-group select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;transition:border-color.2s,box-shadow.2s}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,87,34,.1)}
+  .form-group select{cursor:pointer}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .goal-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .goal-btn{padding:14px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--sub);cursor:pointer;text-align:center;font-size:14px;font-weight:700;transition:all.25s;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .goal-btn:hover{border-color:var(--accent);color:var(--text)}
+  .goal-btn.active.cut{border-color:var(--accent2);color:var(--accent2);background:rgba(0,201,167,.08)}
+  .goal-btn.active.bulk{border-color:var(--accent);color:var(--accent);background:rgba(255,87,34,.08)}
+  .btn-gen{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff7043);color:#fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:transform.15s,box-shadow.15s}
+  .btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,87,34,.3)}
+  .btn-sm{padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;transition:all.2s}
+  .btn-sm:hover{border-color:var(--accent)}
+  .btn-sm.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-sm.export-btn{background:var(--accent2);border-color:var(--accent2);color:#000;font-weight:700;margin-left:8px}
+  .results{display:none;margin:28px 0}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 12px;text-align:center}
+  .stat-card .label{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .stat-card .value{font-size:26px;font-weight:800}.stat-card .unit{font-size:11px;color:var(--sub)}.stat-card .subtext{font-size:11px;margin-top:2px}
+  .val-red{color:var(--accent)}.val-green{color:var(--accent2)}.val-gold{color:var(--gold)}.val-blue{color:var(--blue)}
+  .content-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+  .card.full{grid-column:1/-1}
+  .card-title{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .card-title .ct{display:flex;align-items:center;gap:8px}
+  .card-title .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .macro-item{margin-bottom:12px}
+  .macro-header{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+  .macro-bar-wrap{height:9px;background:var(--bg);border-radius:5px;overflow:hidden}
+  .macro-bar{height:100%;border-radius:5px;transition:width 1s}
+  .macro-bar.protein{background:var(--accent)}.macro-bar.carbs{background:var(--gold)}.macro-bar.fat{background:var(--accent2)}
+  .meal-list{list-style:none}
+  .meal-list li{padding:10px 12px;border-left:3px solid var(--border);margin-bottom:8px;background:var(--bg);border-radius:0 8px 8px 0;font-size:13px}
+  .meal-list li .meal-time{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+  .meal-list li .meal-kcal{float:right;font-weight:700;font-size:11px;color:var(--gold)}
+  .training-day{background:var(--bg);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+  .training-day .day-title{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .day-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600}
+  .day-badge.push{background:rgba(255,87,34,.15);color:var(--accent)}
+  .day-badge.pull{background:rgba(74,144,217,.15);color:var(--blue)}
+  .day-badge.legs{background:rgba(0,201,167,.15);color:var(--accent2)}
+  .day-badge.full{background:rgba(255,179,0,.15);color:var(--gold)}
+  .training-day ul{list-style:none}.training-day ul li{font-size:12px;padding:4px 0;display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.03)}
+  .training-day ul li span:last-child{color:var(--sub)}
+  .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+  .tip-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px}
+  .tip-card .tip-icon{font-size:18px;margin-bottom:4px}.tip-card strong{display:block;margin-bottom:3px}
+  .weight-section{margin-bottom:16px}
+  .weight-input-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .weight-input-row input{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;width:120px}
+  .weight-input-row input[type=date]{color-scheme:dark;width:140px}
+  .weight-table{width:100%;font-size:12px;border-collapse:collapse}
+  .weight-table th{text-align:left;padding:6px 8px;color:var(--sub);border-bottom:1px solid var(--border);font-weight:500}
+  .weight-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+  .weight-table .del-btn{color:var(--accent);cursor:pointer;background:none;border:none;font-size:14px}
+  canvas{width:100%!important;border-radius:8px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  .footer{text-align:center;padding:32px 20px;color:var(--sub);font-size:11px}
+  .install-banner{display:none;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:10px 16px;margin-bottom:16px;text-align:center;font-size:13px;cursor:pointer}
+  .install-banner:hover{background:#1e1e30}
+  @media(max-width:768px){.content-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.form-grid{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff;color:#000}
+    .card,.stat-card,.form-card{background:#fff;border:1px solid #ccc;box-shadow:none;break-inside:avoid}
+    .hero{background:#fff;border:none}
+    .hero h1{-webkit-text-fill-color:#000}
+    .form-section,.toolbar,.install-banner,.footer{display:none}
+    .results{display:block!important}
   }
-
-  /* ====== Hero ====== */
-  .hero {
-    text-align: center;
-    padding: 48px 20px 32px;
-    background: linear-gradient(135deg, #0a0a18 0%, #13132b 40%, #0d0d1f 100%);
-    border-bottom: 1px solid var(--border);
-  }
-  .hero h1 {
-    font-size: clamp(28px, 5vw, 44px);
-    font-weight: 800;
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--accent), var(--gold), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero p { color: var(--sub); font-size: 15px; margin-top: 8px; }
-
-  /* ====== Content Wrapper ====== */
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
-
-  /* ====== Form Card ====== */
-  .form-section { margin-top: -20px; position: relative; z-index: 2; }
-  .form-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px 28px;
-    box-shadow: 0 8px 40px rgba(0,0,0,.4);
-  }
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    color: var(--sub);
-    margin-bottom: 6px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-  }
-  .form-group input, .form-group select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-size: 15px;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  .form-group input:focus, .form-group select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,87,34,.1);
-  }
-  .form-group select { cursor: pointer; appearance: none; }
-  .goal-toggle {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .goal-btn {
-    padding: 16px;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-    background: var(--bg);
-    color: var(--sub);
-    cursor: pointer;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 700;
-    transition: all .25s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .goal-btn .icon { font-size: 28px; }
-  .goal-btn:hover { border-color: var(--accent); color: var(--text); }
-  .goal-btn.active.cut { border-color: var(--accent2); color: var(--accent2); background: rgba(0,201,167,.08); }
-  .goal-btn.active.bulk { border-color: var(--accent); color: var(--accent); background: rgba(255,87,34,.08); }
-
-  .btn-generate {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), #ff7043);
-    color: #fff;
-    font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: transform .15s, box-shadow .15s;
-  }
-  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,87,34,.3); }
-
-  /* ====== Results ====== */
-  .results { display: none; margin: 32px 0; }
-
-  /* Stats row */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 16px;
-    text-align: center;
-  }
-  .stat-card .label { font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .stat-card .value { font-size: 28px; font-weight: 800; }
-  .stat-card .unit { font-size: 12px; color: var(--sub); }
-  .stat-card .subtext { font-size: 12px; margin-top: 4px; }
-  .val-red { color: var(--accent); }
-  .val-green { color: var(--accent2); }
-  .val-gold { color: var(--gold); }
-  .val-blue { color: var(--blue); }
-
-  /* Grid */
-  .content-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-  }
-  .card.full { grid-column: 1 / -1; }
-  .card-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card-title .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
-  /* Macro bars */
-  .macro-item { margin-bottom: 14px; }
-  .macro-item .macro-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
-  .macro-bar-wrap { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; }
-  .macro-bar { height: 100%; border-radius: 5px; transition: width 1s ease; }
-  .macro-bar.protein { background: var(--accent); }
-  .macro-bar.carbs { background: var(--gold); }
-  .macro-bar.fat { background: var(--accent2); }
-
-  /* Meal list */
-  .meal-list { list-style: none; }
-  .meal-list li {
-    padding: 12px 14px;
-    border-left: 3px solid var(--border);
-    margin-bottom: 10px;
-    background: var(--bg);
-    border-radius: 0 8px 8px 0;
-    font-size: 14px;
-  }
-  .meal-list li .meal-time { font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-  .meal-list li .meal-kcal { float: right; font-weight: 700; font-size: 12px; color: var(--gold); }
-
-  /* Training */
-  .training-day {
-    background: var(--bg);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-  }
-  .training-day .day-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-  .training-day .day-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
-  .training-day .day-badge.push { background: rgba(255,87,34,.15); color: var(--accent); }
-  .training-day .day-badge.pull { background: rgba(74,144,217,.15); color: var(--blue); }
-  .training-day .day-badge.legs { background: rgba(0,201,167,.15); color: var(--accent2); }
-  .training-day .day-badge.full { background: rgba(255,179,0,.15); color: var(--gold); }
-  .training-day ul { list-style: none; }
-  .training-day ul li { font-size: 13px; padding: 5px 0; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.03); }
-  .training-day ul li span:last-child { color: var(--sub); font-size: 12px; }
-
-  /* Tips */
-  .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-  .tip-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    font-size: 13px;
-  }
-  .tip-card .tip-icon { font-size: 20px; margin-bottom: 6px; }
-  .tip-card strong { display: block; margin-bottom: 4px; }
-
-  @media (max-width: 768px) {
-    .content-grid { grid-template-columns: 1fr; }
-    .form-grid { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 480px) {
-    .form-grid { grid-template-columns: 1fr; }
-  }
-
-  /* Footer */
-  .footer { text-align: center; padding: 40px 20px; color: var(--sub); font-size: 12px; }
 </style>
 </head>
 <body>
 
 <div class="hero">
   <h1>🏋️ FitPlan</h1>
-  <p>输入身体数据，AI 即刻定制你的增肌 / 减脂全方案</p>
+  <p>输入身体数据，AI 即刻定制增肌 / 减脂全方案</p>
 </div>
 
 <div class="container">
+  <div class="install-banner" id="installBanner" onclick="installPWA()">📲 点击安装到手机桌面，像 App 一样使用</div>
+
   <div class="form-section">
     <div class="form-card">
+      <div class="toolbar">
+        <button class="btn-sm active" id="unitMetric" onclick="setUnit('metric')">公制 (kg/cm)</button>
+        <button class="btn-sm" id="unitImperial" onclick="setUnit('imperial')">英制 (lb/in)</button>
+      </div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>性别</label>
-          <select id="gender"><option value="male">男性</option><option value="female">女性</option></select>
-        </div>
-        <div class="form-group">
-          <label>年龄 (岁)</label>
-          <input type="number" id="age" value="25" min="14" max="80" placeholder="25">
-        </div>
-        <div class="form-group">
-          <label>身高 (cm)</label>
-          <input type="number" id="height" value="175" min="130" max="220" placeholder="175">
-        </div>
-        <div class="form-group">
-          <label>体重 (kg)</label>
-          <input type="number" id="weight" value="75" min="30" max="200" placeholder="75" step="0.1">
-        </div>
-        <div class="form-group">
-          <label>活动量</label>
-          <select id="activity">
-            <option value="1.2">久坐不动 (几乎不运动)</option>
-            <option value="1.375">轻度活动 (每周 1-3 次)</option>
-            <option value="1.55" selected>中度活动 (每周 3-5 次)</option>
-            <option value="1.725">高度活跃 (每周 6-7 次)</option>
-            <option value="1.9">运动员级别 (每天高强度)</option>
-          </select>
-        </div>
+        <div class="form-group"><label>性别</label><select id="gender"><option value="male">男性</option><option value="female">女性</option></select></div>
+        <div class="form-group"><label>年龄</label><input type="number" id="age" value="25" min="14" max="80"></div>
+        <div class="form-group"><label>身高 (<span class="hu">cm</span>)</label><input type="number" id="height" value="175" min="100" max="250" step="0.1"></div>
+        <div class="form-group"><label>体重 (<span class="wu">kg</span>)</label><input type="number" id="weight" value="75" min="30" max="250" step="0.1"></div>
+        <div class="form-group"><label>体脂率 (%) <span style="color:var(--accent2);font-weight:400">可选</span></label><input type="number" id="bodyfat" placeholder="不知道留空" min="3" max="55" step="0.1"></div>
+        <div class="form-group"><label>活动量</label><select id="activity"><option value="1.2">久坐不动</option><option value="1.375">轻度 (1-3次/周)</option><option value="1.55" selected>中度 (3-5次/周)</option><option value="1.725">高度 (6-7次/周)</option><option value="1.9">运动员级别</option></select></div>
       </div>
 
-      <div class="goal-toggle" style="margin-bottom: 20px;">
-        <div class="goal-btn active cut" data-goal="cut" onclick="setGoal('cut')">
-          <span class="icon">🔥</span>减脂塑形<span style="font-size:11px;color:var(--sub);font-weight:400;">热量缺口 · 高蛋白</span>
-        </div>
-        <div class="goal-btn bulk" data-goal="bulk" onclick="setGoal('bulk')">
-          <span class="icon">💪</span>增肌增重<span style="font-size:11px;color:var(--sub);font-weight:400;">热量盈余 · 高碳水</span>
-        </div>
+      <div class="card-title" style="margin-bottom:8px"><span class="ct"><span class="dot" style="background:var(--gold)"></span>训练水平</span></div>
+      <div class="row-3" style="margin-bottom:14px">
+        <button class="btn-sm active" data-level="beginner" onclick="setLevel('beginner')">🟢 新手 (徒手/哑铃)</button>
+        <button class="btn-sm" data-level="intermediate" onclick="setLevel('intermediate')">🟡 进阶 (杠铃+器械)</button>
+        <button class="btn-sm" data-level="advanced" onclick="setLevel('advanced')">🔴 高手 (大重量分化)</button>
       </div>
 
-      <button class="btn-generate" onclick="generatePlan()">⚡ 生成我的专属方案</button>
+      <div class="card-title" style="margin-bottom:8px"><span class="ct"><span class="dot" style="background:var(--accent2)"></span>饮食模式</span></div>
+      <div class="row-3" style="margin-bottom:12px">
+        <button class="btn-sm active" data-diet="balanced" onclick="setDiet('balanced')">🥗 均衡膳食</button>
+        <button class="btn-sm" data-diet="keto" onclick="setDiet('keto')">🥑 生酮饮食</button>
+        <button class="btn-sm" data-diet="lowcarb" onclick="setDiet('lowcarb')">🍖 低碳优脂</button>
+      </div>
+
+      <div class="goal-toggle">
+        <div class="goal-btn active cut" data-goal="cut" onclick="setGoal('cut')"><span style="font-size:24px">🔥</span>减脂塑形<span style="font-size:10px;color:var(--sub);font-weight:400">热量缺口 · 高蛋白</span></div>
+        <div class="goal-btn bulk" data-goal="bulk" onclick="setGoal('bulk')"><span style="font-size:24px">💪</span>增肌增重<span style="font-size:10px;color:var(--sub);font-weight:400">热量盈余 · 高碳水</span></div>
+      </div>
+
+      <button class="btn-gen" onclick="generatePlan()">⚡ 生成我的专属方案</button>
     </div>
   </div>
 
-  <!-- ====== Results ====== -->
   <div class="results" id="results">
-
-    <!-- Stats Cards -->
     <div class="stats-row" id="statsRow"></div>
-
     <div class="content-grid">
-      <!-- Macro Chart -->
-      <div class="card">
-        <div class="card-title"><span class="dot" style="background:var(--accent)"></span>每日营养素分配</div>
-        <div id="macros"></div>
-      </div>
-
-      <!-- BMI + Body Info -->
-      <div class="card">
-        <div class="card-title"><span class="dot" style="background:var(--blue)"></span>身体数据</div>
-        <div id="bodyInfo"></div>
-      </div>
-
-      <!-- Meal Plan -->
+      <div class="card"><div class="card-title"><span class="ct"><span class="dot" style="background:var(--accent)"></span>每日营养素</span></div><div id="macros"></div></div>
+      <div class="card"><div class="card-title"><span class="ct"><span class="dot" style="background:var(--blue)"></span>身体数据</span></div><div id="bodyInfo"></div></div>
       <div class="card full">
-        <div class="card-title"><span class="dot" style="background:var(--accent2)"></span>🍽️ 每日食谱推荐</div>
+        <div class="card-title"><span class="ct"><span class="dot" style="background:var(--gold)"></span>📈 体重追踪</span></span><button class="btn-sm" onclick="addWeight()">+ 记录今日</button></div>
+        <div class="weight-section">
+          <div class="weight-input-row">
+            <input type="date" id="wDate"><input type="number" id="wVal" placeholder="体重" step="0.1"><button class="btn-sm" onclick="addWeight()">记录</button>
+            <button class="btn-sm export-btn" onclick="exportData()">📋 导出</button>
+          </div>
+          <canvas id="weightChart" height="220"></canvas>
+          <div style="max-height:150px;overflow-y:auto;margin-top:8px"><table class="weight-table" id="weightTable"></table></div>
+        </div>
+      </div>
+      <div class="card full">
+        <div class="card-title"><span class="ct"><span class="dot" style="background:var(--accent2)"></span>🍽️ 每日食谱</span><button class="btn-sm" onclick="shuffleMeals()">🎲 换一换</button></div>
         <div id="mealPlan"></div>
       </div>
-
-      <!-- Training Plan -->
       <div class="card full">
-        <div class="card-title"><span class="dot" style="background:var(--accent)"></span>🏋️ 每周力量训练</div>
+        <div class="card-title"><span class="ct"><span class="dot" style="background:var(--accent)"></span>🏋️ 每周训练</span><button class="btn-sm export-btn" onclick="window.print()">🖨️ 打印</button></div>
         <div id="trainingPlan"></div>
       </div>
-
-      <!-- Tips -->
-      <div class="card full">
-        <div class="card-title"><span class="dot" style="background:var(--gold)"></span>💡 关键提示</div>
-        <div id="tips"></div>
-      </div>
+      <div class="card full"><div class="card-title"><span class="ct"><span class="dot" style="background:var(--gold)"></span>💡 关键提示</span></div><div id="tips"></div></div>
     </div>
   </div>
 </div>
-
-<div class="footer">
-  FitPlan · 数据仅供参考，具体请咨询专业营养师或医生
-</div>
+<div class="footer">FitPlan v2 · 数据本地存储 · 仅供参考</div>
 
 <script>
-// ========== 全局状态 ==========
-let goal = 'cut';
+// ========== STATE ==========
+let unit='metric',goal='cut',level='beginner',diet='balanced';
+let weightData=JSON.parse(localStorage.getItem('fitplan_weight')||'[]');
+let lastMealSeed=0;
+let deferredPrompt=null;
 
-function setGoal(g) {
-  goal = g;
-  document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active', 'cut', 'bulk'));
-  const btn = document.querySelector(`[data-goal="${g}"]`);
-  btn.classList.add('active', g);
-}
+function setUnit(u){unit=u;document.getElementById('unitMetric').classList.toggle('active',u==='metric');document.getElementById('unitImperial').classList.toggle('active',u==='imperial');document.querySelectorAll('.hu').forEach(e=>e.textContent=u==='metric'?'cm':'in');document.querySelectorAll('.wu').forEach(e=>e.textContent=u==='metric'?'kg':'lb');localStorage.setItem('fitplan_unit',u)}
+function setGoal(g){goal=g;document.querySelectorAll('.goal-btn').forEach(b=>b.classList.remove('active','cut','bulk'));document.querySelector(`[data-goal="${g}"]`).classList.add('active',g)}
+function setLevel(l){level=l;document.querySelectorAll('[data-level]').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-level="${l}"]`).classList.add('active')}
+function setDiet(d){diet=d;document.querySelectorAll('[data-diet]').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-diet="${d}"]`).classList.add('active')}
 
-// ========== 核心计算 ==========
-function calcBMI(weight, heightM) {
-  return weight / (heightM * heightM);
-}
+// Restore prefs
+(function(){
+  const pu=localStorage.getItem('fitplan_unit');if(pu)setUnit(pu);
+  document.getElementById('wDate').value=new Date().toISOString().slice(0,10);
+})();
 
-function calcBMR(gender, weight, height, age) {
-  // Mifflin-St Jeor
-  if (gender === 'male') {
-    return 10 * weight + 6.25 * height - 5 * age + 5;
-  } else {
-    return 10 * weight + 6.25 * height - 5 * age - 161;
+// ========== CALCULATIONS ==========
+function toKg(v){return unit==='imperial'?v*0.453592:v}
+function toCm(v){return unit==='imperial'?v*2.54:v}
+function fromKg(v){return unit==='imperial'?v/0.453592:v}
+function fromCm(v){return unit==='imperial'?v/2.54:v}
+
+function calcBMR(gender,w,kg,hCm,age,bf){
+  if(bf&&bf>3){
+    const lbm=w*(1-bf/100);
+    return 370+21.6*lbm; // Katch-McArdle
   }
+  if(gender==='male')return 10*w+6.25*hCm-5*age+5;
+  return 10*w+6.25*hCm-5*age-161;
 }
 
-function calcTDEE(bmr, activityFactor) {
-  return bmr * activityFactor;
+function calcTDEE(bmr,af){return bmr*af}
+function calcTarget(tdee,g){return g==='cut'?tdee-450:tdee+400}
+
+function calcMacros(target,g,d,bf){
+  let pPct,cPct,fPct;
+  if(d==='keto'){pPct=0.25;cPct=0.05;fPct=0.70}
+  else if(d==='lowcarb'){pPct=0.35;cPct=0.20;fPct=0.45}
+  else if(g==='cut'){pPct=0.40;cPct=0.30;fPct=0.30}
+  else{pPct=0.30;cPct=0.50;fPct=0.20}
+  // If BF is high, bump protein
+  if(bf&&bf>25){pPct+=0.05;cPct-=0.05}
+  return{protein:{grams:Math.round(target*pPct/4),cal:Math.round(target*pPct)},carbs:{grams:Math.round(target*cPct/4),cal:Math.round(target*cPct)},fat:{grams:Math.round(target*fPct/9),cal:Math.round(target*fPct)},fiber:Math.round(target/1000*14)};
 }
 
-function calcTargetCalories(tdee, goal) {
-  if (goal === 'cut') return tdee - 450;  // 约450kcal缺口
-  return tdee + 400;  // 约400kcal盈余
-}
+// ========== GENERATE ==========
+function generatePlan(){
+  const gender=document.getElementById('gender').value;
+  const age=parseInt(document.getElementById('age').value)||25;
+  const hRaw=parseFloat(document.getElementById('height').value)||175;
+  const wRaw=parseFloat(document.getElementById('weight').value)||75;
+  const bfRaw=document.getElementById('bodyfat').value;
+  const activity=parseFloat(document.getElementById('activity').value)||1.55;
 
-function calcMacros(targetCal, goal) {
-  if (goal === 'cut') {
-    // 高蛋白减脂: 40%蛋白, 30%碳水, 30%脂肪
-    return {
-      protein: { grams: Math.round(targetCal * 0.40 / 4), cal: Math.round(targetCal * 0.40) },
-      carbs:   { grams: Math.round(targetCal * 0.30 / 4), cal: Math.round(targetCal * 0.30) },
-      fat:     { grams: Math.round(targetCal * 0.30 / 9), cal: Math.round(targetCal * 0.30) },
-      fiber: Math.round(targetCal / 1000 * 14), // ~14g per 1000kcal
-    };
-  } else {
-    // 增肌: 30%蛋白, 50%碳水, 20%脂肪
-    return {
-      protein: { grams: Math.round(targetCal * 0.30 / 4), cal: Math.round(targetCal * 0.30) },
-      carbs:   { grams: Math.round(targetCal * 0.50 / 4), cal: Math.round(targetCal * 0.50) },
-      fat:     { grams: Math.round(targetCal * 0.20 / 9), cal: Math.round(targetCal * 0.20) },
-      fiber: Math.round(targetCal / 1000 * 14),
-    };
-  }
-}
+  const hCm=toCm(hRaw),wKg=toKg(wRaw);
+  const bf=bfRaw?parseFloat(bfRaw):null;
+  const bmi=wKg/((hCm/100)**2);
+  const bmr=calcBMR(gender,wKg,hCm,age,bf);
+  const tdee=calcTDEE(bmr,activity);
+  const targetCal=calcTarget(tdee,goal);
+  const macros=calcMacros(targetCal,goal,diet,bf);
 
-// ========== 生成方案 ==========
-function generatePlan() {
-  const gender = document.getElementById('gender').value;
-  const age = parseInt(document.getElementById('age').value) || 25;
-  const height = parseInt(document.getElementById('height').value) || 175;
-  const weight = parseFloat(document.getElementById('weight').value) || 75;
-  const activity = parseFloat(document.getElementById('activity').value) || 1.55;
+  let bmiCat,bmiColor;
+  if(bmi<18.5){bmiCat='偏瘦';bmiColor='var(--blue)'}else if(bmi<24){bmiCat='正常';bmiColor='var(--accent2)'}else if(bmi<28){bmiCat='偏胖';bmiColor='var(--gold)'}else{bmiCat='肥胖';bmiColor='var(--accent)'}
+  const idealLow=(18.5*(hCm/100)**2).toFixed(1);const idealHigh=(24*(hCm/100)**2).toFixed(1);
+  const actLabels={1.2:'久坐',1.375:'轻度',1.55:'中度',1.725:'高度',1.9:'运动员'};
 
-  const heightM = height / 100;
-  const bmi = calcBMI(weight, heightM);
-  const bmr = calcBMR(gender, weight, height, age);
-  const tdee = calcTDEE(bmr, activity);
-  const targetCal = calcTargetCalories(tdee, goal);
-  const macros = calcMacros(targetCal, goal);
+  // Stats
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="label">🎯 目标热量</div><div class="value val-red">${Math.round(targetCal)}</div><div class="unit">kcal/天</div><div class="subtext" style="color:${goal==='cut'?'var(--accent2)':'var(--accent)'}">${goal==='cut'?'⬇ -450':'⬆ +400'}</div></div>
+    <div class="stat-card"><div class="label">🔥 基础代谢</div><div class="value val-gold">${Math.round(bmr)}</div><div class="unit">kcal/天</div><div class="subtext">${bf?`体脂${bf}% · Katch`:'Mifflin-StJeor'}</div></div>
+    <div class="stat-card"><div class="label">📊 总消耗</div><div class="value val-blue">${Math.round(tdee)}</div><div class="unit">kcal/天</div><div class="subtext">${actLabels[activity]}</div></div>
+    <div class="stat-card"><div class="label">⚖️ BMI</div><div class="value" style="color:${bmiColor}">${bmi.toFixed(1)}</div><div class="unit">${bmiCat}</div><div class="subtext">理想${idealLow}~${idealHigh}kg</div></div>
+    <div class="stat-card"><div class="label">🥩 蛋白质</div><div class="value val-red">${macros.protein.grams}g</div><div class="unit">${macros.protein.cal}kcal</div><div class="subtext">${(wKg*macros.protein.grams/targetCal).toFixed(1)}g/kg</div></div>
+    <div class="stat-card"><div class="label">🍚 碳水 · 脂肪</div><div class="value" style="font-size:16px"><span style="color:var(--gold)">${macros.carbs.grams}g</span> / <span style="color:var(--accent2)">${macros.fat.grams}g</span></div><div class="unit">${macros.carbs.cal}+${macros.fat.cal}kcal</div></div>
+  `;
 
-  // BMI 分类
-  let bmiCategory, bmiColor;
-  if (bmi < 18.5) { bmiCategory = '偏瘦'; bmiColor = 'var(--blue)'; }
-  else if (bmi < 24) { bmiCategory = '正常'; bmiColor = 'var(--accent2)'; }
-  else if (bmi < 28) { bmiCategory = '偏胖'; bmiColor = 'var(--gold)'; }
-  else { bmiCategory = '肥胖'; bmiColor = 'var(--accent)'; }
+  // Macro bars
+  const pPct=macros.protein.cal/targetCal*100,cPct=macros.carbs.cal/targetCal*100,fPct=macros.fat.cal/targetCal*100;
+  document.getElementById('macros').innerHTML=`
+    <div class="macro-item"><div class="macro-header"><span>🥩 蛋白质</span><span><b>${macros.protein.grams}g</b> · ${macros.protein.cal}kcal (${Math.round(pPct)}%)</span></div><div class="macro-bar-wrap"><div class="macro-bar protein" style="width:${pPct}%"></div></div></div>
+    <div class="macro-item"><div class="macro-header"><span>🍚 碳水</span><span><b>${macros.carbs.grams}g</b> · ${macros.carbs.cal}kcal (${Math.round(cPct)}%)</span></div><div class="macro-bar-wrap"><div class="macro-bar carbs" style="width:${cPct}%"></div></div></div>
+    <div class="macro-item"><div class="macro-header"><span>🥑 脂肪</span><span><b>${macros.fat.grams}g</b> · ${macros.fat.cal}kcal (${Math.round(fPct)}%)</span></div><div class="macro-bar-wrap"><div class="macro-bar fat" style="width:${fPct}%"></div></div></div>
+    <div class="macro-item"><div class="macro-header"><span>🌾 膳食纤维</span><span><b>${macros.fiber}g</b> 以上</span></div></div>
+    <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--sub)">💡 ${diet==='keto'?'生酮期碳水<50g，身体进入酮症燃脂模式':diet==='lowcarb'?'低碳模式减少胰岛素波动，适合减脂':goal==='cut'?'高蛋白保护肌肉，适度低碳促进燃脂':'高碳水提供训练能量，足量蛋白支持合成'}</div>
+  `;
 
-  // 理想体重范围 (BMI 18.5-24)
-  const idealLow = (18.5 * heightM * heightM).toFixed(1);
-  const idealHigh = (24 * heightM * heightM).toFixed(1);
-
-  // 活动量标签
-  const actLabels = { 1.2:'久坐不动', 1.375:'轻度活动', 1.55:'中度活动', 1.725:'高度活跃', 1.9:'运动员' };
-  const actLabel = actLabels[activity] || '中度活动';
-
-  // ====== 渲染统计卡片 ======
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card">
-      <div class="label">🎯 每日目标热量</div>
-      <div class="value val-red">${Math.round(targetCal)}</div>
-      <div class="unit">千卡 / 天</div>
-      <div class="subtext" style="color:${goal==='cut'?'var(--accent2)':'var(--accent)'}">${goal==='cut'?'⬇ 热量缺口 ~450kcal':'⬆ 热量盈余 ~400kcal'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">🔥 基础代谢 BMR</div>
-      <div class="value val-gold">${Math.round(bmr)}</div>
-      <div class="unit">千卡 / 天</div>
-      <div class="subtext">静息消耗</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">📊 总消耗 TDEE</div>
-      <div class="value val-blue">${Math.round(tdee)}</div>
-      <div class="unit">千卡 / 天</div>
-      <div class="subtext">${actLabel}</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">⚖️ BMI</div>
-      <div class="value" style="color:${bmiColor}">${bmi.toFixed(1)}</div>
-      <div class="unit">${bmiCategory}</div>
-      <div class="subtext">理想: ${idealLow}~${idealHigh}kg</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">🥩 蛋白质</div>
-      <div class="value val-red">${macros.protein.grams}g</div>
-      <div class="unit">${macros.protein.cal} 千卡</div>
-      <div class="subtext">${(weight*macros.protein.grams/targetCal).toFixed(1)}g/kg</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">🍚 碳水 · 脂肪</div>
-      <div class="value" style="font-size:18px;">
-        <span style="color:var(--gold)">${macros.carbs.grams}g</span>
-        <span style="color:var(--sub)"> / </span>
-        <span style="color:var(--accent2)">${macros.fat.grams}g</span>
+  // Body info
+  document.getElementById('bodyInfo').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+      <div><span style="color:var(--sub)">身高</span><br><b>${fromCm(hCm).toFixed(1)} ${unit==='metric'?'cm':'in'}</b></div>
+      <div><span style="color:var(--sub)">体重</span><br><b>${fromKg(wKg).toFixed(1)} ${unit==='metric'?'kg':'lb'}</b></div>
+      <div><span style="color:var(--sub)">BMI</span><br><b style="color:${bmiColor}">${bmi.toFixed(1)} · ${bmiCat}</b></div>
+      <div><span style="color:var(--sub)">体脂率</span><br><b>${bf?bf+'%':"<span style='color:var(--sub)'>未填写</span>"}</b></div>
+      <div><span style="color:var(--sub)">BMR</span><br><b>${Math.round(bmr)}kcal</b></div>
+      <div><span style="color:var(--sub)">TDEE</span><br><b>${Math.round(tdee)}kcal</b></div>
+      <div style="grid-column:1/-1;margin-top:6px;padding:8px;background:var(--bg);border-radius:8px;font-size:12px">
+        <b>${goal==='cut'?'🎯 减脂': '🎯 增肌'}：</b>${Math.round(targetCal)}kcal/天 · ${goal==='cut'?'预计每周减0.4~0.5kg':'预计每周增0.2~0.3kg'}
+        ${bf?`<br>去脂体重 LBM: <b>${(wKg*(1-bf/100)).toFixed(1)}kg</b> · 体脂肪: <b>${(wKg*bf/100).toFixed(1)}kg</b>`:''}
       </div>
-      <div class="unit">碳水 ${macros.carbs.cal} + 脂肪 ${macros.fat.cal} 千卡</div>
-    </div>
-  `;
+    </div>`;
 
-  // ====== 营养素分配 ======
-  document.getElementById('macros').innerHTML = `
-    <div class="macro-item">
-      <div class="macro-header"><span>🥩 蛋白质</span><span><strong>${macros.protein.grams}g</strong> · ${macros.protein.cal} kcal (${goal==='cut'?40:30}%)</span></div>
-      <div class="macro-bar-wrap"><div class="macro-bar protein" style="width:${goal==='cut'?40:30}%"></div></div>
-    </div>
-    <div class="macro-item">
-      <div class="macro-header"><span>🍚 碳水化合物</span><span><strong>${macros.carbs.grams}g</strong> · ${macros.carbs.cal} kcal (${goal==='cut'?30:50}%)</span></div>
-      <div class="macro-bar-wrap"><div class="macro-bar carbs" style="width:${goal==='cut'?30:50}%"></div></div>
-    </div>
-    <div class="macro-item">
-      <div class="macro-header"><span>🥑 脂肪</span><span><strong>${macros.fat.grams}g</strong> · ${macros.fat.cal} kcal (${goal==='cut'?30:20}%)</span></div>
-      <div class="macro-bar-wrap"><div class="macro-bar fat" style="width:${goal==='cut'?30:20}%"></div></div>
-    </div>
-    <div class="macro-item">
-      <div class="macro-header"><span>🌾 膳食纤维</span><span><strong>${macros.fiber}g</strong> 以上</span></div>
-    </div>
-    <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--sub);">
-      💡 1g 蛋白质 = 4kcal · 1g 碳水 = 4kcal · 1g 脂肪 = 9kcal<br>
-      ${goal==='cut' ? '减脂期高蛋白保护肌肉，低碳水促进脂肪燃烧' : '增肌期高碳水提供训练能量，足量蛋白支持肌肉合成'}
-    </div>
-  `;
+  // Meal plan
+  lastMealSeed=Date.now();
+  document.getElementById('mealPlan').innerHTML=genMeals(targetCal,macros,lastMealSeed);
 
-  // ====== 身体数据 ======
-  document.getElementById('bodyInfo').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
-      <div><span style="color:var(--sub)">身高</span><br><strong>${height} cm</strong></div>
-      <div><span style="color:var(--sub)">体重</span><br><strong>${weight} kg</strong></div>
-      <div><span style="color:var(--sub)">BMI</span><br><strong style="color:${bmiColor}">${bmi.toFixed(1)} · ${bmiCategory}</strong></div>
-      <div><span style="color:var(--sub)">理想体重</span><br><strong>${idealLow} ~ ${idealHigh} kg</strong></div>
-      <div><span style="color:var(--sub)">BMR</span><br><strong>${Math.round(bmr)} kcal</strong></div>
-      <div><span style="color:var(--sub)">TDEE</span><br><strong>${Math.round(tdee)} kcal</strong></div>
-      <div style="grid-column:1/-1;margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;font-size:13px;">
-        <strong>${goal==='cut'?'🎯 减脂目标': '🎯 增肌目标'}：</strong>
-        ${goal==='cut'
-          ? `每日 ${Math.round(targetCal)} kcal · 预计每周减 0.4~0.5kg`
-          : `每日 ${Math.round(targetCal)} kcal · 预计每周增 0.2~0.3kg`
-        }
-      </div>
-    </div>
-  `;
+  // Training
+  document.getElementById('trainingPlan').innerHTML=genTraining();
 
-  // ====== 食谱 ======
-  document.getElementById('mealPlan').innerHTML = generateMealPlan(targetCal, macros, goal);
-
-  // ====== 训练计划 ======
-  document.getElementById('trainingPlan').innerHTML = generateTrainingPlan(goal);
-
-  // ====== 关键提示 ======
-  document.getElementById('tips').innerHTML = `
+  // Tips
+  document.getElementById('tips').innerHTML=`
     <div class="tips">
-      <div class="tip-card">
-        <div class="tip-icon">💧</div>
-        <strong>每日饮水</strong>
-        体重 × 35ml = <b>${Math.round(weight * 35)}ml</b>。运动日额外 +500ml。
-      </div>
-      <div class="tip-card">
-        <div class="tip-icon">😴</div>
-        <strong>睡眠质量</strong>
-        每天 7-8 小时。睡眠不足会升高皮质醇，阻碍${goal==='cut'?'减脂':'增肌'}。
-      </div>
-      <div class="tip-card">
-        <div class="tip-icon">📏</div>
-        <strong>${goal==='cut'?'热量缺口':'热量盈余'}</strong>
-        ${goal==='cut'
-          ? '每日缺口约450kcal，安全减脂。不要低于BMR，避免代谢下降。'
-          : '每日盈余约400kcal，精益增肌。盈余过大容易增加过多脂肪。'
-        }
-      </div>
-      <div class="tip-card">
-        <div class="tip-icon">🔄</div>
-        <strong>每周调整</strong>
-        每周同一时间称重，根据体重变化调整 ±100kcal。
-      </div>
-    </div>
-  `;
+      <div class="tip-card"><div class="tip-icon">💧</div><strong>饮水</strong>体重×35ml = <b>${Math.round(wKg*35)}ml</b>/天</div>
+      <div class="tip-card"><div class="tip-icon">😴</div><strong>睡眠</strong>7-8小时，缺觉升高皮质醇阻碍${goal==='cut'?'减脂':'增肌'}</div>
+      <div class="tip-card"><div class="tip-icon">📏</div><strong>${diet==='keto'?'酮症监测':'热量管理'}</strong>${diet==='keto'?'碳水<50g/天，可用酮体试纸检测入酮状态':diet==='lowcarb'?'碳水控制在20%，脂肪供能为主':'保持当前饮食模式，每周调整±100kcal'}</div>
+      <div class="tip-card"><div class="tip-icon">🔄</div><strong>每周调整</strong>固定时间称重，用下方体重追踪记录趋势</div>
+    </div>`;
 
-  // 显示结果
-  document.getElementById('results').style.display = 'block';
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('results').style.display='block';
+  setTimeout(drawWeightChart,200);
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
 }
 
-// ========== 食谱生成 ==========
-function generateMealPlan(targetCal, macros, goal) {
-  const cal = Math.round(targetCal);
-  // 三餐热量分配: 早餐25% 午餐35% 晚餐30% 加餐10%
-  const bfCal = Math.round(cal * 0.25);
-  const luCal = Math.round(cal * 0.35);
-  const diCal = Math.round(cal * 0.30);
-  const snCal = Math.round(cal * 0.10);
+// ========== MEAL GENERATOR ==========
+function seededRand(s){return function(){s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
 
-  // 食物数据库 [name, kcal, protein, carbs, fat]
-  const breakfasts = [
-    ['全麦面包2片 + 水煮蛋2个 + 牛奶250ml', 450, 32, 40, 16],
-    ['燕麦片50g + 蛋白粉1勺 + 香蕉1根 + 脱脂奶', 480, 35, 55, 10],
-    ['杂粮馒头1个 + 鸡蛋2个 + 豆浆300ml', 420, 28, 45, 14],
-    ['全麦吐司3片 + 花生酱15g + 希腊酸奶150g', 440, 25, 42, 20],
-    ['玉米1根 + 水煮蛋3个 + 脱脂牛奶250ml', 400, 30, 35, 14],
-    ['紫薯150g + 鸡蛋白4个 + 核桃15g + 酸奶', 430, 32, 38, 16],
+function genMeals(cal,macros,seed){
+  const rng=seededRand(seed||1);
+  const shuffle=arr=>{for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr};
+
+  const bfCal=Math.round(cal*0.25),luCal=Math.round(cal*0.35),diCal=Math.round(cal*0.30),snCal=Math.round(cal*0.10);
+
+  const ketoMode=diet==='keto',lcMode=diet==='lowcarb';
+
+  const breakfasts=ketoMode?[
+    ['煎蛋3个+牛油果半个+培根2片',430,25,5,34],['奶酪蛋饼+黄油咖啡',400,22,4,33],['烟熏三文鱼+奶油芝士+黄瓜',380,28,6,28],['椰子油煎蛋+香肠+蘑菇',450,30,5,35],['防弹咖啡+水煮蛋3个',390,20,3,33]
+  ]:lcMode?[
+    ['鸡蛋3个+牛油果+番茄',380,22,10,28],['希腊酸奶200g+坚果30g+蓝莓',350,22,18,22],['培根蛋杯+菠菜+芝士',420,28,6,32],['水煮蛋3个+核桃20g+黄瓜',340,24,8,24]
+  ]:[
+    ['全麦面包2片+水煮蛋2个+牛奶250ml',450,32,40,16],['燕麦50g+蛋白粉1勺+香蕉+脱脂奶',480,35,55,10],['杂粮馒头+鸡蛋2个+豆浆300ml',420,28,45,14],['全麦吐司3片+花生酱15g+酸奶',440,25,42,20],['玉米+水煮蛋3个+脱脂奶',400,30,35,14],['紫薯150g+鸡蛋白4个+核桃',430,32,38,16]
   ];
 
-  const lunches = goal === 'cut' ? [
-    ['鸡胸肉150g + 糙米饭150g + 西兰花200g', 480, 45, 50, 12],
-    ['清蒸鱼200g + 藜麦100g + 凉拌菠菜', 450, 42, 42, 14],
-    ['虾仁150g + 荞麦面100g + 黄瓜+西红柿', 460, 38, 48, 13],
-    ['瘦牛肉120g + 紫薯150g + 炒时蔬', 490, 40, 45, 15],
-    ['去皮鸡腿150g + 杂粮饭150g + 芦笋', 470, 42, 48, 12],
-    ['豆腐200g + 虾仁80g + 红薯150g + 西兰花', 440, 36, 46, 14],
-  ] : [
-    ['鸡胸肉200g + 白米饭200g + 西兰花150g', 580, 48, 72, 14],
-    ['牛肉150g + 土豆泥200g + 胡萝卜+青椒', 620, 42, 78, 16],
-    ['三文鱼180g + 糙米饭200g + 炒菠菜', 590, 44, 68, 18],
-    ['猪里脊150g + 馒头2个 + 炒豆角', 600, 40, 75, 15],
-    ['鸡腿2个 + 白米饭200g + 炒蘑菇', 570, 44, 70, 14],
-    ['虾仁200g + 意面150g + 番茄酱+蔬菜', 610, 46, 76, 14],
-  ];
+  const lunches=goal==='cut'?shuffle([
+    ['鸡胸肉150g+糙米饭150g+西兰花',480,45,50,12],['清蒸鱼200g+藜麦100g+菠菜',450,42,42,14],['虾仁150g+荞麦面100g+黄瓜',460,38,48,13],['瘦牛肉120g+紫薯150g+时蔬',490,40,45,15],['去皮鸡腿150g+杂粮饭+芦笋',470,42,48,12],['豆腐200g+虾仁80g+红薯+西兰花',440,36,46,14]
+  ]):shuffle([
+    ['鸡胸肉200g+白米饭200g+西兰花',580,48,72,14],['牛肉150g+土豆泥200g+胡萝卜',620,42,78,16],['三文鱼180g+糙米饭200g+菠菜',590,44,68,18],['猪里脊150g+馒头2个+豆角',600,40,75,15],['鸡腿2个+白米饭200g+蘑菇',570,44,70,14],['虾仁200g+意面150g+番茄',610,46,76,14]
+  ]);
 
-  const dinners = goal === 'cut' ? [
-    ['蒸鱼200g + 蒸南瓜200g + 凉拌黄瓜', 380, 38, 35, 10],
-    ['虾仁100g + 豆腐150g + 魔芋丝 + 青菜', 350, 35, 25, 12],
-    ['鸡蛋白4个 + 菌菇汤 + 蒸紫薯100g', 320, 30, 30, 8],
-    ['瘦牛肉100g + 沙拉(生菜+番茄+油醋汁)', 340, 32, 20, 14],
-    ['清蒸鸡胸150g + 冬瓜汤 + 玉米半根', 360, 38, 32, 8],
-    ['蛤蜊200g + 蒸豆腐 + 炒空心菜', 330, 34, 22, 10],
-  ] : [
-    ['鸡胸肉150g + 炒饭(米饭200g+蛋+蔬菜)', 520, 40, 65, 14],
-    ['牛肉120g + 土豆炖胡萝卜 + 米饭150g', 540, 36, 68, 16],
-    ['三文鱼150g + 烤红薯200g + 炒芦笋', 500, 38, 55, 16],
-    ['鸡蛋2个 + 瘦猪肉100g + 荞麦面150g', 530, 40, 60, 15],
-    ['去皮鸡腿200g + 白米饭180g + 凉拌木耳', 510, 42, 62, 12],
-    ['虾仁150g + 土豆泥 + 炒西兰花', 490, 36, 58, 14],
-  ];
+  const dinners=goal==='cut'?shuffle([
+    ['蒸鱼200g+蒸南瓜200g+黄瓜',380,38,35,10],['虾仁100g+豆腐150g+魔芋丝',350,35,25,12],['鸡蛋白4个+菌菇汤+紫薯',320,30,30,8],['瘦牛肉100g+沙拉+油醋汁',340,32,20,14],['清蒸鸡胸150g+冬瓜汤+玉米',360,38,32,8],['蛤蜊200g+蒸豆腐+空心菜',330,34,22,10]
+  ]):shuffle([
+    ['鸡胸150g+炒饭(米饭+蛋+菜)',520,40,65,14],['牛肉120g+土豆炖胡萝卜+米饭',540,36,68,16],['三文鱼150g+烤红薯+芦笋',500,38,55,16],['鸡蛋2个+瘦猪肉+荞麦面',530,40,60,15],['鸡腿200g+米饭180g+木耳',510,42,62,12],['虾仁150g+土豆泥+西兰花',490,36,58,14]
+  ]);
 
-  const snacks = goal === 'cut' ? [
-    ['蛋白粉1勺(30g) + 水', 120, 24, 3, 1],
-    ['希腊酸奶100g + 蓝莓50g', 100, 10, 12, 3],
-    ['水煮蛋2个', 140, 12, 2, 8],
-    ['蛋白棒1根', 180, 20, 15, 6],
-    ['脱脂牛奶250ml + 杏仁10颗', 150, 12, 14, 6],
-    ['黄瓜条 + 鸡胸肉丝50g', 90, 16, 3, 2],
-  ] : [
-    ['蛋白粉1勺 + 全脂牛奶300ml', 280, 32, 25, 8],
-    ['全麦面包2片 + 花生酱 + 香蕉', 320, 12, 48, 12],
-    ['坚果30g + 酸奶150g', 220, 8, 15, 16],
-    ['鸡蛋3个 + 吐司1片', 250, 20, 18, 10],
-    ['牛肉干50g + 水果', 200, 22, 15, 6],
-    ['牛奶250ml + 燕麦饼干2片', 260, 10, 35, 9],
-  ];
+  const snacks=goal==='cut'?shuffle([
+    ['蛋白粉1勺+水',120,24,3,1],['希腊酸奶100g+蓝莓',100,10,12,3],['水煮蛋2个',140,12,2,8],['蛋白棒1根',180,20,15,6],['脱脂奶250ml+杏仁10颗',150,12,14,6],['黄瓜条+鸡胸肉丝50g',90,16,3,2]
+  ]):shuffle([
+    ['蛋白粉1勺+全脂牛奶300ml',280,32,25,8],['全麦面包2片+花生酱+香蕉',320,12,48,12],['坚果30g+酸奶150g',220,8,15,16],['鸡蛋3个+吐司1片',250,20,18,10],['牛肉干50g+水果',200,22,15,6],['牛奶+燕麦饼干2片',260,10,35,9]
+  ]);
 
-  function pick(arr, targetKcal) {
-    let best = arr[0];
-    let bestDiff = Math.abs(getKcal(best) - targetKcal);
-    arr.forEach(item => {
-      const diff = Math.abs(getKcal(item) - targetKcal);
-      if (diff < bestDiff) { bestDiff = diff; best = item; }
-    });
-    return best;
+  if(ketoMode){
+    lunches.length=0;dinners.length=0;
+    lunches.push(['煎鸡胸200g+牛油果沙拉+橄榄油',520,42,8,36],['烤三文鱼200g+黄油西兰花',500,40,6,36],['牛排150g+炒蘑菇+黄油',560,38,5,42],['烤鸡腿2个+凯撒沙拉(无面包丁)',480,40,7,34],['虾仁炒蛋+菠菜+椰子油',450,38,6,32],['猪五花肉+生菜包+泡菜',530,35,5,42]);
+    dinners.push(['煎鱼排+芦笋+黄油',400,36,5,28],['芝士牛肉饼(无饼皮)+沙拉',420,40,6,29],['烤羊排+薄荷酱+烤西葫芦',460,34,4,36],['鸡蛋豆腐煲+五花肉片',380,30,6,28],['奶酪烤鸡胸+番茄+橄榄',390,38,7,26]);
+    snacks.length=0;
+    snacks.push(['牛油果半个+核桃',200,4,6,20],['芝士条2根',180,14,2,14],['夏威夷果30g',200,3,4,22],['防弹咖啡(小)',160,1,1,17]);
+  }else if(lcMode){
+    lunches.forEach(l=>{l[2]=Math.round(l[2]*1.1);l[4]=Math.round(l[4]*1.3);l[3]=Math.round(l[3]*0.5)});
+    dinners.forEach(d=>{d[2]=Math.round(d[2]*1.1);d[4]=Math.round(d[4]*1.3);d[3]=Math.round(d[3]*0.5)});
   }
-  function getKcal(item) { return item[1]; }
 
-  const bf = pick(breakfasts, bfCal);
-  const lu = pick(lunches, luCal);
-  const di = pick(dinners, diCal);
-  const sn = pick(snacks, snCal);
+  function pick(arr,target){let b=arr[0],bd=Math.abs(b[1]-target);arr.forEach(i=>{const d=Math.abs(i[1]-target);if(d<bd){bd=d;b=i}});return b}
+  const bf=pick(breakfasts,bfCal),lu=pick(lunches,luCal),di=pick(dinners,diCal),sn=pick(snacks,snCal);
+  const totalKcal=bf[1]+lu[1]+di[1]+sn[1],totalP=bf[2]+lu[2]+di[2]+sn[2],totalC=bf[3]+lu[3]+di[3]+sn[3],totalF=bf[4]+lu[4]+di[4]+sn[4];
 
-  return `
-    <ul class="meal-list">
-      <li style="border-left-color:var(--gold)">
-        <div class="meal-time">🌅 早餐 · ~${bf[1]} kcal</div>
-        <span class="meal-kcal">${bf[1]} kcal</span>
-        <div>${bf[0]}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:3px">蛋白 ${bf[2]}g · 碳水 ${bf[3]}g · 脂肪 ${bf[4]}g</div>
-      </li>
-      <li style="border-left-color:var(--accent)">
-        <div class="meal-time">☀️ 午餐 · ~${lu[1]} kcal</div>
-        <span class="meal-kcal">${lu[1]} kcal</span>
-        <div>${lu[0]}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:3px">蛋白 ${lu[2]}g · 碳水 ${lu[3]}g · 脂肪 ${lu[4]}g</div>
-      </li>
-      <li style="border-left-color:var(--blue)">
-        <div class="meal-time">🌆 晚餐 · ~${di[1]} kcal</div>
-        <span class="meal-kcal">${di[1]} kcal</span>
-        <div>${di[0]}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:3px">蛋白 ${di[2]}g · 碳水 ${di[3]}g · 脂肪 ${di[4]}g</div>
-      </li>
-      <li style="border-left-color:var(--accent2)">
-        <div class="meal-time">🍎 加餐 · ~${sn[1]} kcal</div>
-        <span class="meal-kcal">${sn[1]} kcal</span>
-        <div>${sn[0]}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:3px">蛋白 ${sn[2]}g · 碳水 ${sn[3]}g · 脂肪 ${sn[4]}g</div>
-      </li>
-    </ul>
-    <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--sub);text-align:center;">
-      📊 全天合计约 <b style="color:var(--text)">${bf[1]+lu[1]+di[1]+sn[1]} kcal</b> ·
-      蛋白 <b style="color:var(--text)">${bf[2]+lu[2]+di[2]+sn[2]}g</b> ·
-      碳水 <b style="color:var(--text)">${bf[3]+lu[3]+di[3]+sn[3]}g</b> ·
-      脂肪 <b style="color:var(--text)">${bf[4]+lu[4]+di[4]+sn[4]}g</b>
-    </div>
-  `;
+  return `<ul class="meal-list">
+    <li style="border-left-color:var(--gold)"><div class="meal-time">🌅 早餐 · ~${bf[1]}kcal</div><span class="meal-kcal">${bf[1]}kcal</span><div>${bf[0]}</div><div style="font-size:10px;color:var(--sub);margin-top:2px">蛋白${bf[2]}g · 碳水${bf[3]}g · 脂肪${bf[4]}g</div></li>
+    <li style="border-left-color:var(--accent)"><div class="meal-time">☀️ 午餐 · ~${lu[1]}kcal</div><span class="meal-kcal">${lu[1]}kcal</span><div>${lu[0]}</div><div style="font-size:10px;color:var(--sub);margin-top:2px">蛋白${lu[2]}g · 碳水${lu[3]}g · 脂肪${lu[4]}g</div></li>
+    <li style="border-left-color:var(--blue)"><div class="meal-time">🌆 晚餐 · ~${di[1]}kcal</div><span class="meal-kcal">${di[1]}kcal</span><div>${di[0]}</div><div style="font-size:10px;color:var(--sub);margin-top:2px">蛋白${di[2]}g · 碳水${di[3]}g · 脂肪${di[4]}g</div></li>
+    <li style="border-left-color:var(--accent2)"><div class="meal-time">🍎 加餐 · ~${sn[1]}kcal</div><span class="meal-kcal">${sn[1]}kcal</span><div>${sn[0]}</div><div style="font-size:10px;color:var(--sub);margin-top:2px">蛋白${sn[2]}g · 碳水${sn[3]}g · 脂肪${sn[4]}g</div></li>
+  </ul>
+  <div style="margin-top:10px;padding:8px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--sub);text-align:center">📊 全天合计 ~<b style="color:var(--text)">${totalKcal}kcal</b> · 蛋白<b style="color:var(--text)">${totalP}g</b> · 碳水<b style="color:var(--text)">${totalC}g</b> · 脂肪<b style="color:var(--text)">${totalF}g</b></div>`;
 }
 
-// ========== 训练计划生成 ==========
-function generateTrainingPlan(goal) {
-  if (goal === 'cut') {
-    // 减脂: 全身训练 + 有氧
-    return `
-      <div class="training-day">
-        <div class="day-title">🔴 周一 · 全身力量 <span class="day-badge full">Full Body</span></div>
-        <ul>
-          <li><span>杠铃深蹲</span><span>4×12-15 次</span></li>
-          <li><span>哑铃卧推</span><span>4×12-15 次</span></li>
-          <li><span>引体向上 / 高位下拉</span><span>4×10-12 次</span></li>
-          <li><span>哑铃推举</span><span>3×12-15 次</span></li>
-          <li><span>俯身哑铃划船</span><span>3×12-15 次</span></li>
-          <li><span>平板支撑</span><span>3×45-60 秒</span></li>
-          <li><span>🏃 有氧: 跑步/椭圆机</span><span>30 分钟 中低强度</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🟡 周三 · 全身力量 + HIIT <span class="day-badge full">Full Body</span></div>
-        <ul>
-          <li><span>罗马尼亚硬拉</span><span>4×12-15 次</span></li>
-          <li><span>哑铃弓步蹲</span><span>3×12 次/腿</span></li>
-          <li><span>上斜哑铃卧推</span><span>3×12-15 次</span></li>
-          <li><span>坐姿划船</span><span>3×12-15 次</span></li>
-          <li><span>哑铃侧平举</span><span>3×15-20 次</span></li>
-          <li><span>悬垂举腿</span><span>3×15-20 次</span></li>
-          <li><span>🔥 HIIT 间歇跑</span><span>20 分钟 (30s冲刺/60s慢走)</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🟢 周五 · 全身力量 + 核心 <span class="day-badge full">Full Body</span></div>
-        <ul>
-          <li><span>高脚杯深蹲</span><span>4×15-20 次</span></li>
-          <li><span>俯卧撑 / 哑铃飞鸟</span><span>4×12-15 次</span></li>
-          <li><span>杠铃划船</span><span>3×12-15 次</span></li>
-          <li><span>阿诺德推举</span><span>3×12-15 次</span></li>
-          <li><span>哑铃弯举 + 臂屈伸</span><span>3×12-15 次 (超级组)</span></li>
-          <li><span>俄罗斯转体 + 卷腹</span><span>3×20 次 (超级组)</span></li>
-          <li><span>🚴 有氧: 单车/游泳</span><span>30-40 分钟</span></li>
-        </ul>
-      </div>
-      <div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--sub);">
-        💡 <b style="color:var(--text)">周二/四/六</b>：可选 40 分钟低强度有氧（快走/单车）· <b style="color:var(--text)">周日</b>：完全休息
-        <br>减脂期中等重量 + 高次数 + 短间歇(60s)，保持心率在脂肪燃烧区间
-      </div>
-    `;
-  } else {
-    // 增肌: PPL 分化训练
-    return `
-      <div class="training-day">
-        <div class="day-title">🔴 周一 · 推 (Push) <span class="day-badge push">胸·肩·三头</span></div>
-        <ul>
-          <li><span>杠铃平板卧推</span><span>5×6-10 次</span></li>
-          <li><span>上斜哑铃卧推</span><span>4×8-12 次</span></li>
-          <li><span>哑铃/绳索飞鸟</span><span>3×12-15 次</span></li>
-          <li><span>坐姿哑铃推举</span><span>4×8-12 次</span></li>
-          <li><span>哑铃侧平举</span><span>4×12-15 次</span></li>
-          <li><span>绳索下压 (三头)</span><span>3×12-15 次</span></li>
-          <li><span>双杠臂屈伸</span><span>3×8-12 次</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🔵 周二 · 拉 (Pull) <span class="day-badge pull">背·二头</span></div>
-        <ul>
-          <li><span>杠铃硬拉</span><span>5×5-8 次</span></li>
-          <li><span>引体向上 / 高位下拉</span><span>4×8-12 次</span></li>
-          <li><span>俯身杠铃划船</span><span>4×8-12 次</span></li>
-          <li><span>坐姿绳索划船</span><span>3×10-12 次</span></li>
-          <li><span>面拉 (Face Pull)</span><span>3×15-20 次</span></li>
-          <li><span>杠铃弯举 (二头)</span><span>4×10-12 次</span></li>
-          <li><span>锤式弯举</span><span>3×12-15 次</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🟢 周四 · 腿 (Legs) <span class="day-badge legs">腿·臀·核心</span></div>
-        <ul>
-          <li><span>杠铃深蹲</span><span>5×5-10 次</span></li>
-          <li><span>罗马尼亚硬拉</span><span>4×8-12 次</span></li>
-          <li><span>保加利亚分腿蹲</span><span>3×10-12 次/腿</span></li>
-          <li><span>腿举 (Leg Press)</span><span>3×10-15 次</span></li>
-          <li><span>腿弯举 (腘绳肌)</span><span>3×12-15 次</span></li>
-          <li><span>站姿提踵</span><span>4×15-20 次</span></li>
-          <li><span>悬垂举腿 + 卷腹</span><span>3×15-20 次 (超级组)</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🟡 周五 · 推 (Push) <span class="day-badge push">胸·肩·三头</span></div>
-        <ul>
-          <li><span>上斜杠铃卧推</span><span>5×8-12 次</span></li>
-          <li><span>哑铃平板卧推</span><span>4×8-12 次</span></li>
-          <li><span>器械夹胸</span><span>3×12-15 次</span></li>
-          <li><span>站姿杠铃推举</span><span>4×6-10 次</span></li>
-          <li><span>哑铃前平举</span><span>3×12-15 次</span></li>
-          <li><span>窄距卧推 (三头)</span><span>3×8-12 次</span></li>
-        </ul>
-      </div>
-      <div class="training-day">
-        <div class="day-title">🟣 周六 · 拉 + 腿 (弱项补强) <span class="day-badge pull">拉·腿</span></div>
-        <ul>
-          <li><span>负重引体向上</span><span>4×6-10 次</span></li>
-          <li><span>T杆划船</span><span>4×8-12 次</span></li>
-          <li><span>前蹲</span><span>4×8-12 次</span></li>
-          <li><span>哑铃弯举</span><span>3×12-15 次</span></li>
-          <li><span>农夫行走</span><span>3×30 秒</span></li>
-          <li><span>腹肌轮 / 仰卧起坐</span><span>3×15-20 次</span></li>
-        </ul>
-      </div>
-      <div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--sub);">
-        💡 <b style="color:var(--text)">周三/周日</b>：休息日 · 增肌期大重量 + 低次数(6-12) + 长间歇(2-3min)
-        <br>每周逐渐增加重量（渐进超负荷），保证动作标准避免受伤
-      </div>
-    `;
+function shuffleMeals(){lastMealSeed=Date.now();document.getElementById('mealPlan').innerHTML=genMeals(Math.round(calcTarget(calcTDEE(calcBMR(document.getElementById('gender').value,toKg(parseFloat(document.getElementById('weight').value)||75),toCm(parseFloat(document.getElementById('height').value)||175),parseInt(document.getElementById('age').value)||25,parseFloat(document.getElementById('bodyfat').value)||null),parseFloat(document.getElementById('activity').value)||1.55),goal),null,lastMealSeed)}
+
+// ========== TRAINING ==========
+function genTraining(){
+  if(level==='beginner'){
+    if(goal==='cut'){
+      return `<div class="training-day"><div class="day-title">🟢 周一 · 全身徒手 <span class="day-badge full">Full Body</span></div><ul><li><span>徒手深蹲</span><span>3×20次</span></li><li><span>跪姿俯卧撑</span><span>3×12-15次</span></li><li><span>哑铃划船 (单臂)</span><span>3×12次/侧</span></li><li><span>臀桥</span><span>3×20次</span></li><li><span>平板支撑</span><span>3×30-45秒</span></li><li><span>🏃 快走/慢跑</span><span>25分钟</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟢 周三 · 全身徒手 <span class="day-badge full">Full Body</span></div><ul><li><span>高脚杯深蹲 (哑铃)</span><span>3×15次</span></li><li><span>上斜俯卧撑</span><span>3×12-15次</span></li><li><span>弹力带划船</span><span>3×15次</span></li><li><span>哑铃推举</span><span>3×12次</span></li><li><span>死虫式 (核心)</span><span>3×12次/侧</span></li><li><span>🚴 单车/跳绳</span><span>20分钟</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟢 周五 · 全身徒手 <span class="day-badge full">Full Body</span></div><ul><li><span>弓步蹲 (徒手)</span><span>3×12次/腿</span></li><li><span>桌下反握划船</span><span>3×10次</span></li><li><span>宽距俯卧撑</span><span>3×10次</span></li><li><span>哑铃弯举</span><span>3×15次</span></li><li><span>俄罗斯转体</span><span>3×20次</span></li><li><span>🏃 快走</span><span>30分钟</span></li></ul></div>
+      <div style="padding:10px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--sub);margin-top:8px">💡 <b style="color:var(--text)">不需要健身房</b> · 一副哑铃即可 · 周二/四/六可选快走40分钟 · 周日休息</div>`;
+    }
+    return `<div class="training-day"><div class="day-title">🟢 周一 · 上肢 <span class="day-badge push">推+拉</span></div><ul><li><span>标准俯卧撑</span><span>4×8-12次</span></li><li><span>哑铃卧推 (地板)</span><span>4×10-12次</span></li><li><span>哑铃划船 (单臂)</span><span>4×10-12次/侧</span></li><li><span>哑铃推举</span><span>3×10-12次</span></li><li><span>哑铃弯举</span><span>3×12-15次</span></li><li><span>板凳臂屈伸</span><span>3×10-12次</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟢 周三 · 下肢 <span class="day-badge legs">腿+核心</span></div><ul><li><span>高脚杯深蹲</span><span>4×12-15次</span></li><li><span>保加利亚分腿蹲</span><span>3×10次/腿</span></li><li><span>臀桥 (单腿进阶)</span><span>3×15次/腿</span></li><li><span>平板支撑</span><span>3×45秒</span></li><li><span>卷腹</span><span>3×20次</span></li><li><span>超人式 (下背)</span><span>3×15次</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟢 周五 · 全身 <span class="day-badge full">Full Body</span></div><ul><li><span>哑铃深蹲+推举</span><span>3×10次 (复合)</span></li><li><span>俯卧撑+划船超级组</span><span>3×10次</span></li><li><span>哑铃罗马尼亚硬拉</span><span>3×12次</span></li><li><span>侧平举</span><span>3×15次</span></li><li><span>锤式弯举</span><span>3×12次</span></li><li><span>死虫式</span><span>3×12次/侧</span></li></ul></div>
+      <div style="padding:10px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--sub);margin-top:8px">💡 <b style="color:var(--text)">哑铃+徒手即可</b> · 周二/四/六/日休息 · 每个动作控制节奏(2秒下3秒上)</div>`;
+  }
+  if(level==='intermediate'){
+    if(goal==='cut'){
+      return `<div class="training-day"><div class="day-title">🟡 周一 · 全身 <span class="day-badge full">Full Body</span></div><ul><li><span>杠铃深蹲</span><span>4×10-12次</span></li><li><span>哑铃卧推</span><span>4×10-12次</span></li><li><span>杠铃划船</span><span>4×10-12次</span></li><li><span>哑铃推举</span><span>3×12次</span></li><li><span>罗马尼亚硬拉</span><span>3×10次</span></li><li><span>🏃 间歇跑</span><span>20分钟 (30s冲/60s慢)</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟡 周三 · 全身 <span class="day-badge full">Full Body</span></div><ul><li><span>前蹲</span><span>4×10-12次</span></li><li><span>上斜哑铃卧推</span><span>4×10-12次</span></li><li><span>引体向上/下拉</span><span>4×8-10次</span></li><li><span>坐姿划船</span><span>3×12次</span></li><li><span>哑铃侧平举</span><span>3×15次</span></li><li><span>🚴 单车</span><span>30分钟</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟡 周五 · 全身+有氧 <span class="day-badge full">Full Body</span></div><ul><li><span>硬拉</span><span>4×8-10次</span></li><li><span>双杠臂屈伸</span><span>3×10次</span></li><li><span>哑铃弓步走</span><span>3×12步</span></li><li><span>面拉</span><span>3×15次</span></li><li><span>悬垂举腿</span><span>3×15次</span></li><li><span>🏃 慢跑</span><span>30分钟</span></li></ul></div>`;
+    }
+    return `<div class="training-day"><div class="day-title">🟡 周一 · 推 <span class="day-badge push">胸·肩·三头</span></div><ul><li><span>杠铃卧推</span><span>5×6-10次</span></li><li><span>上斜哑铃卧推</span><span>4×8-12次</span></li><li><span>坐姿推举</span><span>4×8-12次</span></li><li><span>哑铃飞鸟</span><span>3×12-15次</span></li><li><span>侧平举</span><span>4×12-15次</span></li><li><span>绳索下压</span><span>3×12-15次</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟡 周二 · 拉 <span class="day-badge pull">背·二头</span></div><ul><li><span>硬拉</span><span>5×5-8次</span></li><li><span>引体向上</span><span>4×8-10次</span></li><li><span>杠铃划船</span><span>4×8-12次</span></li><li><span>坐姿划船</span><span>3×10-12次</span></li><li><span>杠铃弯举</span><span>4×10-12次</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟡 周四 · 腿 <span class="day-badge legs">腿·臀</span></div><ul><li><span>杠铃深蹲</span><span>5×6-10次</span></li><li><span>罗马尼亚硬拉</span><span>4×8-12次</span></li><li><span>腿举</span><span>3×10-15次</span></li><li><span>腿弯举</span><span>3×12-15次</span></li><li><span>提踵</span><span>4×15-20次</span></li><li><span>卷腹</span><span>3×15-20次</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🟡 周五 · 推+拉 <span class="day-badge push">上肢</span></div><ul><li><span>上斜杠铃卧推</span><span>4×8-12次</span></li><li><span>高位下拉</span><span>4×8-12次</span></li><li><span>哑铃推举</span><span>3×10-12次</span></li><li><span>T杆划船</span><span>3×10-12次</span></li><li><span>窄距卧推</span><span>3×10-12次</span></li><li><span>锤式弯举</span><span>3×12-15次</span></li></ul></div>`;
+  }
+  // Advanced (original PPL)
+  if(goal==='cut'){
+    return `<div class="training-day"><div class="day-title">🔴 周一 · 全身力量 <span class="day-badge full">Full Body</span></div><ul><li><span>杠铃深蹲</span><span>4×12-15次</span></li><li><span>哑铃卧推</span><span>4×12-15次</span></li><li><span>引体向上</span><span>4×10-12次</span></li><li><span>哑铃推举</span><span>3×12-15次</span></li><li><span>俯身划船</span><span>3×12-15次</span></li><li><span>🏃 有氧</span><span>30分钟</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🔴 周三 · 全身+HIIT <span class="day-badge full">Full Body</span></div><ul><li><span>罗马尼亚硬拉</span><span>4×12-15次</span></li><li><span>哑铃弓步蹲</span><span>3×12次/腿</span></li><li><span>上斜卧推</span><span>3×12-15次</span></li><li><span>坐姿划船</span><span>3×12-15次</span></li><li><span>侧平举</span><span>3×15-20次</span></li><li><span>🔥 HIIT</span><span>20分钟</span></li></ul></div>
+      <div class="training-day"><div class="day-title">🔴 周五 · 全身+核心 <span class="day-badge full">Full Body</span></div><ul><li><span>高脚杯深蹲</span><span>4×15-20次</span></li><li><span>哑铃飞鸟</span><span>4×12-15次</span></li><li><span>杠铃划船</span><span>3×12-15次</span></li><li><span>弯举+臂屈伸</span><span>3×12-15次</span></li><li><span>俄罗斯转体+卷腹</span><span>3×20次</span></li><li><span>🚴 单车/游泳</span><span>30-40分钟</span></li></ul></div>`;
+  }
+  return `<div class="training-day"><div class="day-title">🔴 周一 · 推 <span class="day-badge push">胸·肩·三头</span></div><ul><li><span>杠铃平板卧推</span><span>5×6-10次</span></li><li><span>上斜哑铃卧推</span><span>4×8-12次</span></li><li><span>哑铃飞鸟</span><span>3×12-15次</span></li><li><span>坐姿推举</span><span>4×8-12次</span></li><li><span>侧平举</span><span>4×12-15次</span></li><li><span>绳索下压</span><span>3×12-15次</span></li></ul></div>
+    <div class="training-day"><div class="day-title">🔴 周二 · 拉 <span class="day-badge pull">背·二头</span></div><ul><li><span>杠铃硬拉</span><span>5×5-8次</span></li><li><span>引体向上</span><span>4×8-12次</span></li><li><span>俯身杠铃划船</span><span>4×8-12次</span></li><li><span>坐姿划船</span><span>3×10-12次</span></li><li><span>杠铃弯举</span><span>4×10-12次</span></li></ul></div>
+    <div class="training-day"><div class="day-title">🔴 周四 · 腿 <span class="day-badge legs">腿·核心</span></div><ul><li><span>杠铃深蹲</span><span>5×5-10次</span></li><li><span>罗马尼亚硬拉</span><span>4×8-12次</span></li><li><span>保加利亚分腿蹲</span><span>3×10-12次/腿</span></li><li><span>腿举</span><span>3×10-15次</span></li><li><span>提踵</span><span>4×15-20次</span></li></ul></div>
+    <div class="training-day"><div class="day-title">🔴 周五 · 推(变式) <span class="day-badge push">胸·肩</span></div><ul><li><span>上斜杠铃卧推</span><span>5×8-12次</span></li><li><span>哑铃平板卧推</span><span>4×8-12次</span></li><li><span>器械夹胸</span><span>3×12-15次</span></li><li><span>站姿杠铃推举</span><span>4×6-10次</span></li><li><span>窄距卧推</span><span>3×8-12次</span></li></ul></div>
+    <div class="training-day"><div class="day-title">🔴 周六 · 拉+腿(补强) <span class="day-badge pull">拉·腿</span></div><ul><li><span>负重引体向上</span><span>4×6-10次</span></li><li><span>T杆划船</span><span>4×8-12次</span></li><li><span>前蹲</span><span>4×8-12次</span></li><li><span>农夫行走</span><span>3×30秒</span></li><li><span>腹肌轮</span><span>3×15-20次</span></li></ul></div>`;
+}
+
+// ========== WEIGHT TRACKER ==========
+function addWeight(){
+  const date=document.getElementById('wDate').value||new Date().toISOString().slice(0,10);
+  const val=parseFloat(document.getElementById('wVal').value);
+  if(!val||val<=0)return alert('请输入有效体重');
+  weightData=weightData.filter(w=>w.date!==date);
+  weightData.push({date,weight:val});
+  weightData.sort((a,b)=>a.date.localeCompare(b.date));
+  if(weightData.length>200)weightData=weightData.slice(-200);
+  localStorage.setItem('fitplan_weight',JSON.stringify(weightData));
+  document.getElementById('wVal').value='';
+  renderWeightTable();drawWeightChart();
+}
+
+function deleteWeight(date){
+  weightData=weightData.filter(w=>w.date!==date);
+  localStorage.setItem('fitplan_weight',JSON.stringify(weightData));
+  renderWeightTable();drawWeightChart();
+}
+
+function renderWeightTable(){
+  const recent=[...weightData].reverse().slice(0,30);
+  document.getElementById('weightTable').innerHTML=recent.length?`
+    <tr><th>日期</th><th>体重</th><th>变化</th><th></th></tr>
+    ${recent.map((w,i)=>{
+      const prev=recent[i+1];
+      const diff=prev?(w.weight-prev.weight).toFixed(1):'';
+      const diffColor=diff>0?'var(--accent)':diff<0?'var(--accent2)':'var(--sub)';
+      const sign=diff>0?'+':'';return`<tr><td>${w.date}</td><td><b>${w.weight}</b></td><td style="color:${diffColor}">${diff?sign+diff:''}</td><td><button class="del-btn" onclick="deleteWeight('${w.date}')">✕</button></td></tr>`;
+    }).join('')}
+  `:'<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">📝 还没有记录，输入体重开始追踪</div>';
+}
+
+function drawWeightChart(){
+  const canvas=document.getElementById('weightChart');
+  if(!canvas||weightData.length<2){canvas&&(canvas.style.display='none');return}
+  canvas.style.display='block';
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.parentElement.getBoundingClientRect();
+  canvas.width=rect.width*dpr;canvas.height=220*dpr;
+  canvas.style.width=rect.width+'px';canvas.style.height='220px';
+  ctx.scale(dpr,dpr);
+
+  const data=weightData;
+  const pad={top:20,right:20,bottom:30,left:50};
+  const w=rect.width-pad.left-pad.right,h=220-pad.top-pad.bottom;
+  const vals=data.map(d=>d.weight);
+  const yMin=Math.floor(Math.min(...vals)-1),yMax=Math.ceil(Math.max(...vals)+1);
+
+  const xScale=i=>pad.left+(i/(data.length-1))*w;
+  const yScale=v=>pad.top+h-((v-yMin)/(yMax-yMin))*h;
+
+  // Grid
+  ctx.strokeStyle='#1e2030';ctx.lineWidth=1;
+  for(let v=yMin;v<=yMax;v++){const y=yScale(v);ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+w,y);ctx.stroke()}
+  // Axes
+  ctx.strokeStyle='#2a2d3a';ctx.beginPath();ctx.moveTo(pad.left,pad.top);ctx.lineTo(pad.left,pad.top+h);ctx.lineTo(pad.left+w,pad.top+h);ctx.stroke();
+  // Y labels
+  ctx.fillStyle='#7c7c9a';ctx.font='11px sans-serif';ctx.textAlign='right';
+  for(let v=yMin;v<=yMax;v++)ctx.fillText(v.toFixed(1),pad.left-8,yScale(v)+4);
+  // X labels
+  ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(data.length/6));
+  for(let i=0;i<data.length;i+=step){ctx.fillText(data[i].date.slice(5),xScale(i),pad.top+h+18)}
+
+  // Line
+  ctx.beginPath();ctx.strokeStyle='#ff5722';ctx.lineWidth=2.5;
+  for(let i=0;i<data.length;i++){const x=xScale(i),y=yScale(data[i].weight);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+  // Dots
+  data.forEach((d,i)=>{ctx.beginPath();ctx.arc(xScale(i),yScale(d.weight),4,0,Math.PI*2);ctx.fillStyle='#ff5722';ctx.fill();ctx.strokeStyle='#13131d';ctx.lineWidth=1.5;ctx.stroke()});
+  // Fill
+  ctx.beginPath();for(let i=0;i<data.length;i++){const x=xScale(i),y=yScale(data[i].weight);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.lineTo(xScale(data.length-1),pad.top+h);ctx.lineTo(xScale(0),pad.top+h);ctx.fillStyle='rgba(255,87,34,0.06)';ctx.fill();
+
+  // Trend arrow
+  if(data.length>=7){
+    const recent=data.slice(-7);const trend=recent[recent.length-1].weight-recent[0].weight;
+    ctx.fillStyle=trend>0?'#ff5722':trend<0?'#00c9a7':'#7c7c9a';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
+    ctx.fillText(`近7日: ${trend>0?'+':''}${trend.toFixed(1)}kg`,pad.left+4,pad.top+16);
   }
 }
 
-// ========== 初始加载默认方案 ==========
+function exportData(){
+  const csv='Date,Weight\n'+weightData.map(w=>`${w.date},${w.weight}`).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='weight-data.csv';a.click();
+}
+
+// ========== PWA ==========
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register("data:application/javascript,"+encodeURIComponent("self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})"));
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').style.display='block'});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBanner').style.display='none'})}}
+
+// ========== LOAD ==========
+renderWeightTable();
+setTimeout(drawWeightChart,300);
 generatePlan();
+window.addEventListener('resize',()=>{if(weightData.length>=2)drawWeightChart()});
 </script>
 </body>
 </html>
