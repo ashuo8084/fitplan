@@ -181,27 +181,24 @@ let weightData=JSON.parse(localStorage.getItem('fitplan_weight')||'[]');
 let lastMealSeed=0;
 let deferredPrompt=null;
 
-function setUnit(u){unit=u;document.getElementById('unitMetric').classList.toggle('active',u==='metric');document.getElementById('unitImperial').classList.toggle('active',u==='imperial');document.querySelectorAll('.hu').forEach(e=>e.textContent=u==='metric'?'cm':'in');document.querySelectorAll('.wu').forEach(e=>e.textContent=u==='metric'?'kg':'lb');localStorage.setItem('fitplan_unit',u);generatePlan()}
+function setUnit(u){unit=u;document.getElementById('unitMetric').classList.toggle('active',u==='metric');document.getElementById('unitImperial').classList.toggle('active',u==='imperial');document.querySelectorAll('.hu').forEach(e=>e.textContent=u==='metric'?'cm':'in');document.querySelectorAll('.wu').forEach(e=>e.textContent=u==='metric'?'kg':'lb');localStorage.setItem('fitplan_unit',u)}
 function setGoal(g){
   goal=g;
   document.querySelectorAll('.goal-btn').forEach(b=>{b.classList.remove('active','cut','bulk')});
   const btn=document.querySelector(`[data-goal="${g}"]`);
   if(btn){btn.classList.add('active');btn.classList.add(g)}
-  setTimeout(()=>generatePlan(),10);
 }
 function setLevel(l){
   level=l;
   document.querySelectorAll('[data-level]').forEach(b=>b.classList.remove('active'));
   const btn=document.querySelector(`[data-level="${l}"]`);
   if(btn)btn.classList.add('active');
-  setTimeout(()=>generatePlan(),10);
 }
 function setDiet(d){
   diet=d;
   document.querySelectorAll('[data-diet]').forEach(b=>b.classList.remove('active'));
   const btn=document.querySelector(`[data-diet="${d}"]`);
   if(btn)btn.classList.add('active');
-  setTimeout(()=>generatePlan(),10);
 }
 
 // Restore prefs
