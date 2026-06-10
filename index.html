@@ -181,10 +181,10 @@ let weightData=JSON.parse(localStorage.getItem('fitplan_weight')||'[]');
 let lastMealSeed=0;
 let deferredPrompt=null;
 
-function setUnit(u){unit=u;document.getElementById('unitMetric').classList.toggle('active',u==='metric');document.getElementById('unitImperial').classList.toggle('active',u==='imperial');document.querySelectorAll('.hu').forEach(e=>e.textContent=u==='metric'?'cm':'in');document.querySelectorAll('.wu').forEach(e=>e.textContent=u==='metric'?'kg':'lb');localStorage.setItem('fitplan_unit',u)}
-function setGoal(g){goal=g;document.querySelectorAll('.goal-btn').forEach(b=>b.classList.remove('active','cut','bulk'));document.querySelector(`[data-goal="${g}"]`).classList.add('active',g)}
-function setLevel(l){level=l;document.querySelectorAll('[data-level]').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-level="${l}"]`).classList.add('active')}
-function setDiet(d){diet=d;document.querySelectorAll('[data-diet]').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-diet="${d}"]`).classList.add('active')}
+function setUnit(u){unit=u;document.getElementById('unitMetric').classList.toggle('active',u==='metric');document.getElementById('unitImperial').classList.toggle('active',u==='imperial');document.querySelectorAll('.hu').forEach(e=>e.textContent=u==='metric'?'cm':'in');document.querySelectorAll('.wu').forEach(e=>e.textContent=u==='metric'?'kg':'lb');localStorage.setItem('fitplan_unit',u);generatePlan()}
+function setGoal(g){goal=g;document.querySelectorAll('.goal-btn').forEach(b=>b.classList.remove('active','cut','bulk'));document.querySelector(`[data-goal="${g}"]`).classList.add('active',g);generatePlan()}
+function setLevel(l){level=l;document.querySelectorAll('[data-level]').forEach(b=>b.classList.remove('active'));const btn=document.querySelector(`[data-level="${l}"]`);if(btn)btn.classList.add('active');generatePlan()}
+function setDiet(d){diet=d;document.querySelectorAll('[data-diet]').forEach(b=>b.classList.remove('active'));const btn=document.querySelector(`[data-diet="${d}"]`);if(btn)btn.classList.add('active');generatePlan()}
 
 // Restore prefs
 (function(){
@@ -495,10 +495,10 @@ if('serviceWorker'in navigator){
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').style.display='block'});
 function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBanner').style.display='none'})}}
 
-// ========== LOAD ==========
-renderWeightTable();
-setTimeout(drawWeightChart,300);
+// ========== INIT ==========
 generatePlan();
+renderWeightTable();
+setTimeout(drawWeightChart,400);
 window.addEventListener('resize',()=>{if(weightData.length>=2)drawWeightChart()});
 </script>
 </body>
