@@ -82,21 +82,22 @@ jobs:
           echo "android.buildToolsVersion=34.0.0" >> gradle.properties
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace 2>&1 | tail -30
-          echo "=== Looking for APK ==="
-          find . -name "*.apk" 2>/dev/null || echo "No APK found with find"
-          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "No debug dir"
+          echo "=== Locating APK ==="
+          find . -name "*.apk" -exec ls -la {} \; 2>/dev/null
+          # Copy APK to repo root for easy upload
+          cp app/build/outputs/apk/debug/app-debug.apk ../fitplan.apk 2>/dev/null || echo "APK not at default path"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: FitPlan-APK
-          path: app-build/android/**/*.apk
+          path: app-build/fitplan.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: 'FitPlan v${{ github.run_number }}'
-          files: app-build/android/app/build/outputs/apk/debug/app-debug.apk
+          files: app-build/fitplan.apk
           token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
