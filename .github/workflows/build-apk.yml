@@ -1,0 +1,85 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create Capacitor project
+        run: |
+          mkdir -p app-build
+          cp index.html app-build/
+          cd app-build
+          npm init -y > /dev/null 2>&1
+          npm install @capacitor/core @capacitor/cli @capacitor/android > /dev/null 2>&1
+          
+          # Capacitor config
+          cat > capacitor.config.json << EOF
+          {
+            "appId": "com.fitplan.app",
+            "appName": "FitPlan",
+            "webDir": ".",
+            "bundledWebRuntime": false
+          }
+          EOF
+          
+          # Generate icons
+          node -e "
+          const fs=require('fs'),z=require('zlib');
+          function png(w,h,r,g,b){
+            const s=Buffer.from([137,80,78,71,13,10,26,10]);
+            const ih=Buffer.alloc(13);ih.writeUInt32BE(w,0);ih.writeUInt32BE(h,4);ih[8]=8;ih[9]=2;
+            const c=(t,d)=>{const l=Buffer.alloc(4);l.writeUInt32BE(d.length,0);const tb=Buffer.from(t);const cd=Buffer.concat([tb,d]);let cr=0xFFFFFFFF;for(let i=0;i<cd.length;i++){cr^=cd[i];for(let j=0;j<8;j++)cr=(cr>>>1)^(cr&1?0xEDB88320:0)}const cb=Buffer.alloc(4);cb.writeUInt32BE((cr^0xFFFFFFFF)>>>0,0);return Buffer.concat([l,tb,d,cb])};
+            const rd=[];for(let y=0;y<h;y++){rd.push(0);for(let x=0;x<w;x++)rd.push(r,g,b)}
+            return Buffer.concat([s,c('IHDR',ih),c('IDAT',z.deflateSync(Buffer.from(rd))),c('IEND',Buffer.alloc(0))]);
+          }
+          fs.writeFileSync('icon-192.png',png(192,192,255,87,34));
+          fs.writeFileSync('icon-512.png',png(512,512,255,87,34));
+          "
+
+          npx cap init FitPlan com.fitplan.app --web-dir=. > /dev/null 2>&1
+          npx cap add android > /dev/null 2>&1
+
+      - name: Build APK
+        run: |
+          cd app-build/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitPlan-APK
+          path: app-build/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          tag_name: v${{ github.run_number }}
+          name: 'FitPlan v2.${{ github.run_number }}'
+          files: app-build/android/app/build/outputs/apk/debug/app-debug.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
