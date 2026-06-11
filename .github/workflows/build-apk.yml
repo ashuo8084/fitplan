@@ -65,14 +65,6 @@ jobs:
           npx cap init FitPlan com.fitplan.app --web-dir=www
           npx cap add android
 
-      - name: Debug env
-        run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "JAVA_HOME=$JAVA_HOME"
-          ls $ANDROID_SDK_ROOT/platforms/ 2>/dev/null || echo "no platforms"
-          ls $ANDROID_SDK_ROOT/build-tools/ 2>/dev/null || echo "no build-tools"
-
       - name: Compile APK
         run: |
           cd app-build/android
@@ -81,11 +73,19 @@ jobs:
           echo "android.compileSdkVersion=34" >> gradle.properties
           echo "android.buildToolsVersion=34.0.0" >> gradle.properties
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace 2>&1 | tail -30
-          echo "=== Locating APK ==="
-          find . -name "*.apk" -exec ls -la {} \; 2>/dev/null
-          # Copy APK to repo root for easy upload
-          cp app/build/outputs/apk/debug/app-debug.apk ../fitplan.apk 2>/dev/null || echo "APK not at default path"
+          echo "=== Building ==="
+          ./gradlew assembleDebug 2>&1 | tail -30
+          echo "=== Searching for APK files anywhere ==="
+          find /home -name "*.apk" -type f 2>/dev/null
+          echo "=== Searching in current dir ==="
+          find . -name "*.apk" -type f 2>/dev/null
+          echo "=== Listing build dirs ==="
+          ls -R app/build/outputs/ 2>/dev/null || echo "No app/build/outputs"
+          # Try multiple possible paths
+          for p in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/*.apk; do
+            if [ -f "$p" ]; then echo "FOUND: $p"; cp "$p" ../fitplan.apk; break; fi
+          done
+          if [ -f ../fitplan.apk ]; then echo "APK copied! Size: $(stat -c%s ../fitplan.apk)"; else echo "FATAL: No APK found"; fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
