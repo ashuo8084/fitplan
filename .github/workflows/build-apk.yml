@@ -65,27 +65,26 @@ jobs:
           npx cap init FitPlan com.fitplan.app --web-dir=www
           npx cap add android
 
-      - name: Compile APK
+      - name: Build Android App
         run: |
-          cd app-build/android
+          cd app-build
+          npx cap sync android
+          cd android
           ANDROID_SDK=$(echo $ANDROID_SDK_ROOT | tr '\\\\' '/')
           echo "sdk.dir=$ANDROID_SDK" > local.properties
-          echo "android.compileSdkVersion=34" >> gradle.properties
-          echo "android.buildToolsVersion=34.0.0" >> gradle.properties
           chmod +x gradlew
-          echo "=== Building ==="
-          ./gradlew assembleDebug 2>&1 | tail -30
-          echo "=== Searching for APK files anywhere ==="
-          find /home -name "*.apk" -type f 2>/dev/null
-          echo "=== Searching in current dir ==="
-          find . -name "*.apk" -type f 2>/dev/null
-          echo "=== Listing build dirs ==="
-          ls -R app/build/outputs/ 2>/dev/null || echo "No app/build/outputs"
-          # Try multiple possible paths
-          for p in app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/*.apk; do
-            if [ -f "$p" ]; then echo "FOUND: $p"; cp "$p" ../fitplan.apk; break; fi
-          done
-          if [ -f ../fitplan.apk ]; then echo "APK copied! Size: $(stat -c%s ../fitplan.apk)"; else echo "FATAL: No APK found"; fi
+          ./gradlew assembleDebug
+
+      - name: Copy APK
+        run: |
+          APK=$(find app-build/android -name "*.apk" -type f | head -1)
+          if [ -n "$APK" ]; then
+            cp "$APK" app-build/fitplan.apk
+            echo "APK: $APK ($(stat -c%s app-build/fitplan.apk) bytes)"
+          else
+            echo "ERROR: No APK found"
+            find app-build/android -name "*.apk" -type f 2>/dev/null
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
